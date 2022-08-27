@@ -1,5 +1,6 @@
-from django.http import HttpResponse
+import os
+from ..utils.authorization import get_params
 
-
-def index(request):
-    return HttpResponse("Hello, world. You're at the heros index.")
+# get all heroes with name and ID
+def get_all(request):
+    endpoint = os.getenv('BASE_URL') + 'characters' + get_params()
