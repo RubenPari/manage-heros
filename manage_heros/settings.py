@@ -19,7 +19,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'heros',
+    'heros.apps.HerosConfig',
 ]
 
 MIDDLEWARE = [
@@ -54,6 +54,7 @@ WSGI_APPLICATION = 'manage_heros.wsgi.application'
 
 DATABASES = {
     'default': {
+        # TODO: change DB name
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.getenv('DB_NAME'),
         'USER': os.getenv('DB_USER'),
