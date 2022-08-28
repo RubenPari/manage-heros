@@ -1,18 +1,20 @@
 import hashlib
 import os
-from random import random
+import random
 
 """
 generate a string containing
 auth param for use endpoints
 """
+
+
 def get_params():
     url = ''
 
     # generate random number for ts param
     ts = str(random.randint(1, 1000))
 
-    url += '?' + ts + '&'
+    url += '?ts=' + ts + '&'
 
     # get private and public key
     public_key = os.getenv('PUBLIC_KEY')
