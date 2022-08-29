@@ -3,11 +3,13 @@ import os
 
 import urllib3
 from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 
+from heros.models import Characters
 from utils.authorization import get_params
 
 
-# get all heroes with name and ID
+# get all heroes
 # TODO: managing offset
 def get_all(request):
     endpoint = os.getenv('BASE_URL') + 'characters' + get_params()
@@ -31,9 +33,53 @@ def get_all(request):
     for hero in data:
         new_data.append({
             "id": hero["id"],
-            "name": hero["name"]
+            "name": hero["name"],
+            "description": hero["description"],
+            "thumbnail": hero["thumbnail"]["path"] + "." + hero["thumbnail"]["extension"],
+            "url": hero["resourceURI"]
         })
 
     new_data = json.dumps(new_data)
 
     return HttpResponse(new_data, content_type='application/json')
+
+
+# add new hero
+@csrf_exempt
+def add(request):
+    if request.method != 'POST':
+        return HttpResponse(status=405, content=None, content_type='application/json')
+
+    name = request.GET.get('name')
+
+    # call endpoint to get all heroes name with all ID
+    endpoint_get_heroes = "http://localhost:8000/heros/get_all"
+
+    http = urllib3.PoolManager()
+    response = http.request('GET', endpoint_get_heroes)
+
+    all_heroes = json.loads(response.data)
+
+    hero_added = None
+
+    # TODO: implementing offset
+    # check if hero name exist
+    for hero in all_heroes:
+        if hero["name"] == name:
+            hero_added = hero
+            break
+
+    if hero_added is None:
+        return HttpResponse(status=404, content="THe hero searched doesn\'t exist", content_type='application/json')
+
+    # add hero to DB
+    hero = Characters(name=hero_added["name"], description=hero_added["description"], url=hero_added["url"],
+                      thumbnail=hero_added["thumbnail"])
+    hero.save()
+
+    response = json.dumps({
+        "status": "success",
+        "message": "Hero added successfully"
+    })
+
+    return HttpResponse(status=201, content=response, content_type='application/json')
