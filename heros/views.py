@@ -83,3 +83,45 @@ def add(request):
     })
 
     return HttpResponse(status=201, content=response, content_type='application/json')
+
+
+# delete hero
+@csrf_exempt
+def delete(request):
+    if request.method != 'DELETE':
+        return HttpResponse(status=405, content=None, content_type='application/json')
+
+    name = request.GET.get('name')
+
+    # call endpoint to get all heroes name with all ID
+    endpoint_get_heroes = "http://localhost:8000/heros/get_all"
+
+    http = urllib3.PoolManager()
+    response = http.request('GET', endpoint_get_heroes)
+
+    all_heroes = json.loads(response.data)
+
+    hero_deleted = None
+
+    for hero in all_heroes:
+        if hero["name"] == name:
+            hero_deleted = hero
+            break
+
+    error_response = json.dumps({
+        "status": "error",
+        "message": "Hero searched doesn\'t exist"
+    })
+
+    if hero_deleted is None:
+        return HttpResponse(status=404, content=error_response, content_type='application/json')
+
+    # delete hero from DB
+    Characters.objects.filter(name=hero_deleted["name"]).delete()
+
+    response = json.dumps({
+        "status": "success",
+        "message": "Hero deleted successfully"
+    })
+
+    return HttpResponse(status=200, content=response, content_type='application/json')
