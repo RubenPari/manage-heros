@@ -7,7 +7,7 @@ class Characters(models.Model):
     description = models.TextField()
 
     # array of urls
-    urls = models.TextField()
+    url = models.TextField()
 
     # image
     thumbnail = models.TextField()
