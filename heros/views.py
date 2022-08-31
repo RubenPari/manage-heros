@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from heros.models import Characters
 from utils.authorization import get_params
+from utils.name_string import clear_string
 
 
 # get all heroes
@@ -43,6 +44,49 @@ def get_all(request):
 
     return HttpResponse(new_data, content_type='application/json')
 
+# check if hero exists in Marvel DB
+# TODO: managing offset
+def exists(request):
+    if request.method != 'GET':
+        return HttpResponse(status=405, content=None, content_type='application/json')
+
+    name = request.GET.get('name')
+
+    endpoint = os.getenv('BASE_URL') + 'characters' + get_params()
+
+    http = urllib3.PoolManager()
+    response = http.request('GET', endpoint)
+
+    error_response = json.dumps({
+        "status": "error",
+        "message": "error getting all heroes from Marvel DB"
+    })
+
+    if response.status != 200:
+        return HttpResponse(status=response.status, content=error_response, content_type='application/json')
+
+    data = json.loads(response.data)
+
+    data = data["data"]["results"]
+
+    exists = False
+
+    # check if hero name exists
+    for hero in data:
+        if clear_string(hero["name"]) == clear_string(name):
+            exists = True
+            break
+
+    if exists:
+        return HttpResponse(status=200, content=json.dumps({
+            "status": "success",
+            "message": "hero exists"
+        }), content_type='application/json')
+    else:
+        return HttpResponse(status=404, content=json.dumps({
+            "status": "success",
+            "message": "hero does not exist"
+        }), content_type='application/json')
 
 # add new hero
 @csrf_exempt
@@ -65,7 +109,7 @@ def add(request):
     # TODO: implementing offset
     # check if hero name exist
     for hero in all_heroes:
-        if hero["name"] == name:
+        if clear_string(hero["name"]) == clear_string(name):
             hero_added = hero
             break
 
@@ -83,7 +127,6 @@ def add(request):
     })
 
     return HttpResponse(status=201, content=response, content_type='application/json')
-
 
 # delete hero
 @csrf_exempt
@@ -104,7 +147,7 @@ def delete(request):
     hero_deleted = None
 
     for hero in all_heroes:
-        if hero["name"] == name:
+        if clear_string(hero["name"]) == clear_string(name):
             hero_deleted = hero
             break
 
