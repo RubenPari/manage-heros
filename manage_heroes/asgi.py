@@ -1,5 +1,5 @@
 """
-ASGI config for manage_heros project.
+ASGI config for manage_heroes project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'manage_heros.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'manage_heroes.settings')
 
 application = get_asgi_application()

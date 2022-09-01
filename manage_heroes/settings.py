@@ -19,7 +19,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'heros.apps.HerosConfig',
+    'heroes.apps.HeroesConfig',
     'corsheaders',
 ]
 
@@ -38,7 +38,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 
-ROOT_URLCONF = 'manage_heros.urls'
+ROOT_URLCONF = 'manage_heroes.urls'
 
 TEMPLATES = [
     {
@@ -56,7 +56,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'manage_heros.wsgi.application'
+WSGI_APPLICATION = 'manage_heroes.wsgi.application'
 
 DATABASES = {
     'default': {

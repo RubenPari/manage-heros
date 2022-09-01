@@ -5,14 +5,14 @@ import urllib3
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from heros.models import Characters
+from heroes.models import Characters
 from utils.authorization import get_params
 from utils.name_string import clear_string
 
 
-# get all heroes
+# get all heroes available in Marvel DB
 # TODO: managing offset
-def get_all(request):
+def get_all_available(request):
     endpoint = os.getenv('BASE_URL') + 'characters' + get_params()
 
     http = urllib3.PoolManager()
@@ -97,7 +97,7 @@ def add(request):
     name = request.GET.get('name')
 
     # call endpoint to get all heroes name with all ID
-    endpoint_get_heroes = "http://localhost:8000/heros/get_all"
+    endpoint_get_heroes = "http://localhost:8000/heroes/get_all_available"
 
     http = urllib3.PoolManager()
     response = http.request('GET', endpoint_get_heroes)
@@ -137,7 +137,7 @@ def delete(request):
     name = request.GET.get('name')
 
     # call endpoint to get all heroes name with all ID
-    endpoint_get_heroes = "http://localhost:8000/heros/get_all"
+    endpoint_get_heroes = "http://localhost:8000/heroes/get_all_available"
 
     http = urllib3.PoolManager()
     response = http.request('GET', endpoint_get_heroes)
