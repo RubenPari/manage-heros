@@ -44,6 +44,27 @@ def get_all_available(request):
 
     return HttpResponse(new_data, content_type='application/json')
 
+
+# get all heroes
+def get_all(request):
+    heroes = Characters.objects.values_list()
+
+    heroes_list = []
+
+    for hero in heroes:
+        heroes_list.append({
+            "id": hero[0],
+            "name": hero[1],
+            "description": hero[2],
+            "thumbnail": hero[3],
+            "url": hero[4]
+        })
+
+    heroes_list = json.dumps(heroes_list)
+
+    return HttpResponse(heroes_list, content_type='application/json')
+
+
 # check if hero exists in Marvel DB
 # TODO: managing offset
 def exists(request):
@@ -88,6 +109,7 @@ def exists(request):
             "message": "hero does not exist"
         }), content_type='application/json')
 
+
 # add new hero
 @csrf_exempt
 def add(request):
@@ -127,6 +149,7 @@ def add(request):
     })
 
     return HttpResponse(status=201, content=response, content_type='application/json')
+
 
 # delete hero
 @csrf_exempt
