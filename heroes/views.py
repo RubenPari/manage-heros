@@ -21,10 +21,8 @@ def get_all_available(request):
     if response.status != 200:
         return HttpResponse(status=response.status, content=response.data, content_type='application/json')
 
-    data = response.data
-
     # convert string to json
-    data = json.loads(data)
+    data = json.loads(response.data)
 
     data = data["data"]["results"]
 
@@ -56,8 +54,8 @@ def get_all(request):
             "id": hero[0],
             "name": hero[1],
             "description": hero[2],
-            "thumbnail": hero[3],
-            "url": hero[4]
+            "url": hero[3],
+            "thumbnail": hero[4]
         })
 
     heroes_list = json.dumps(heroes_list)
@@ -157,37 +155,28 @@ def delete(request):
     if request.method != 'DELETE':
         return HttpResponse(status=405, content=None, content_type='application/json')
 
-    name = request.GET.get('name')
+    id = request.GET.get('id')
 
-    # call endpoint to get all heroes name with all ID
-    endpoint_get_heroes = "http://localhost:8000/heroes/get_all_available"
+    # check if hero exists
+    all_heroes = Characters.objects.values_list()
 
-    http = urllib3.PoolManager()
-    response = http.request('GET', endpoint_get_heroes)
-
-    all_heroes = json.loads(response.data)
-
-    hero_deleted = None
+    hero_exist = False
 
     for hero in all_heroes:
-        if clear_string(hero["name"]) == clear_string(name):
-            hero_deleted = hero
+        if hero[0] == id:
+            hero_exist = True
             break
 
-    error_response = json.dumps({
-        "status": "error",
-        "message": "Hero searched doesn\'t exist"
-    })
-
-    if hero_deleted is None:
-        return HttpResponse(status=404, content=error_response, content_type='application/json')
-
-    # delete hero from DB
-    Characters.objects.filter(name=hero_deleted["name"]).delete()
+    hero_deleted = None
 
     response = json.dumps({
         "status": "success",
         "message": "Hero deleted successfully"
     })
 
-    return HttpResponse(status=200, content=response, content_type='application/json')
+    if hero_exist:
+        hero_deleted = Characters.objects.get(id=id)
+        hero_deleted.delete()
+        return HttpResponse(status=200, content=response, content_type='application/json')
+    else:
+        return HttpResponse(status=404, content="Hero not found", content_type='application/json')
