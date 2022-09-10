@@ -137,7 +137,8 @@ def add(request):
         return HttpResponse(status=404, content="THe hero searched doesn\'t exist", content_type='application/json')
 
     # add hero to DB
-    hero = Characters(name=hero_added["name"], description=hero_added["description"], url=hero_added["url"],
+    hero = Characters(id=hero_added["id"], name=hero_added["name"], description=hero_added["description"],
+                      url=hero_added["url"],
                       thumbnail=hero_added["thumbnail"])
     hero.save()
 
