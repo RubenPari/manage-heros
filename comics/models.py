@@ -10,8 +10,7 @@ class Comic(models.Model):
     format = models.CharField(max_length=255)
     pageCount = models.IntegerField()
     resourceURI = models.TextField()
-    # array of urls
-    urls = models.TextField()
+    url = models.TextField()
     thumbnail = models.TextField()
 
     def __str__(self):
