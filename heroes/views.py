@@ -45,6 +45,7 @@ def get_all_available(request):
 
 # get all heroes
 def get_all(request):
+    # TODO: add method not allowed
     heroes = Characters.objects.values_list()
 
     heroes_list = []
@@ -133,6 +134,8 @@ def add(request):
             hero_added = hero
             break
 
+    # TODO: check if hero already exists in DB
+    # TODO: add response object
     if hero_added is None:
         return HttpResponse(status=404, content="THe hero searched doesn\'t exist", content_type='application/json')
 
