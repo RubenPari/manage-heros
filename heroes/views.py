@@ -13,6 +13,9 @@ from utils.name_string import clear_string
 # get all heroes available in Marvel DB
 # TODO: managing offset
 def get_all_available(request):
+    if request.method != 'GET':
+        return HttpResponse(status=405, content='', content_type='application/json')
+
     endpoint = os.getenv('BASE_URL') + 'characters' + get_params()
 
     http = urllib3.PoolManager()
@@ -26,11 +29,10 @@ def get_all_available(request):
 
     data = data["data"]["results"]
 
-    # create new list with name and ID
-    new_data = []
+    heroes_list = []
 
     for hero in data:
-        new_data.append({
+        heroes_list.append({
             "id": hero["id"],
             "name": hero["name"],
             "description": hero["description"],
@@ -38,14 +40,16 @@ def get_all_available(request):
             "url": hero["resourceURI"]
         })
 
-    new_data = json.dumps(new_data)
+    heroes_list = json.dumps(heroes_list)
 
-    return HttpResponse(new_data, content_type='application/json')
+    return HttpResponse(heroes_list, content_type='application/json')
 
 
 # get all heroes
 def get_all(request):
-    # TODO: add method not allowed
+    if request.method != 'GET':
+        return HttpResponse(status=405, content='', content_type='application/json')
+
     heroes = Characters.objects.values_list()
 
     heroes_list = []
@@ -63,57 +67,11 @@ def get_all(request):
 
     return HttpResponse(heroes_list, content_type='application/json')
 
-
-# check if hero exists in Marvel DB
-# TODO: managing offset
-def exists(request):
-    if request.method != 'GET':
-        return HttpResponse(status=405, content=None, content_type='application/json')
-
-    name = request.GET.get('name')
-
-    endpoint = os.getenv('BASE_URL') + 'characters' + get_params()
-
-    http = urllib3.PoolManager()
-    response = http.request('GET', endpoint)
-
-    error_response = json.dumps({
-        "status": "error",
-        "message": "error getting all heroes from Marvel DB"
-    })
-
-    if response.status != 200:
-        return HttpResponse(status=response.status, content=error_response, content_type='application/json')
-
-    data = json.loads(response.data)
-
-    data = data["data"]["results"]
-
-    exists = False
-
-    # check if hero name exists
-    for hero in data:
-        if clear_string(hero["name"]) == clear_string(name):
-            exists = True
-            break
-
-    if exists:
-        return HttpResponse(status=200, content=json.dumps({
-            "status": "success",
-            "message": "hero exists"
-        }), content_type='application/json')
-    else:
-        return HttpResponse(status=404, content=json.dumps({
-            "status": "success",
-            "message": "hero does not exist"
-        }), content_type='application/json')
-
-
 # add new hero
 @csrf_exempt
 def add(request):
     if request.method != 'POST':
-        return HttpResponse(status=405, content=None, content_type='application/json')
+        return HttpResponse(status=405, content="", content_type='application/json')
 
     name = request.GET.get('name')
 
@@ -128,16 +86,26 @@ def add(request):
     hero_added = None
 
     # TODO: implementing offset
-    # check if hero name exist
+    # check if hero name exist in Marvel DB
     for hero in all_heroes:
         if clear_string(hero["name"]) == clear_string(name):
             hero_added = hero
             break
 
-    # TODO: check if hero already exists in DB
-    # TODO: add response object
     if hero_added is None:
-        return HttpResponse(status=404, content="THe hero searched doesn\'t exist", content_type='application/json')
+        return HttpResponse(status=404, content=json.dumps({
+            "status": "error",
+            "message": "hero does not exist in Marvel DB"
+        }), content_type='application/json')
+
+    # check if hero already exists in DB
+    already_exists = Characters.objects.filter(name=hero_added["name"]).exists()
+
+    if already_exists:
+        return HttpResponse(status=409, content=json.dumps({
+            "status": "error",
+            "message": "hero already exists"
+        }), content_type='application/json')
 
     # add hero to DB
     hero = Characters(id=hero_added["id"], name=hero_added["name"], description=hero_added["description"],
@@ -145,42 +113,41 @@ def add(request):
                       thumbnail=hero_added["thumbnail"])
     hero.save()
 
-    response = json.dumps({
+    return HttpResponse(status=201, content=json.dumps({
         "status": "success",
         "message": "Hero added successfully"
-    })
-
-    return HttpResponse(status=201, content=response, content_type='application/json')
+    }), content_type='application/json')
 
 
 # delete hero
 @csrf_exempt
 def delete(request):
     if request.method != 'DELETE':
-        return HttpResponse(status=405, content=None, content_type='application/json')
+        return HttpResponse(status=405, content="", content_type='application/json')
 
     id = request.GET.get('id')
 
     # check if hero exists
     all_heroes = Characters.objects.values_list()
 
-    hero_exist = False
+    exist = False
 
     for hero in all_heroes:
         if hero[0] == id:
-            hero_exist = True
+            exist = True
             break
 
-    hero_deleted = None
+    if not exist:
+        return HttpResponse(status=404, content=json.dumps({
+            "status": "error",
+            "message": "hero does not exist"
+        }), content_type='application/json')
 
-    response = json.dumps({
+    hero_deleted = Characters.objects.get(id=id)
+
+    hero_deleted.delete()
+
+    return HttpResponse(status=200, content=json.dumps({
         "status": "success",
-        "message": "Hero deleted successfully"
-    })
-
-    if hero_exist:
-        hero_deleted = Characters.objects.get(id=id)
-        hero_deleted.delete()
-        return HttpResponse(status=200, content=response, content_type='application/json')
-    else:
-        return HttpResponse(status=404, content="Hero not found", content_type='application/json')
+        "message": "hero deleted successfully"
+    }), content_type='application/json')
