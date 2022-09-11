@@ -151,3 +151,32 @@ def add(request):
     })
 
     return HttpResponse(status=201, content=success_response, content_type='application/json')
+
+
+# delete
+@csrf_exempt
+def delete(request):
+    if request.method != 'DELETE':
+        return HttpResponse(status=405, content="", content_type='application/json')
+
+    id = request.GET.get('id')
+
+    exists = Comic.objects.filter(id=id).exists()
+
+    error_response = json.dumps({
+        "status": "error",
+        "message": "comic doesn't exist in DB"
+    })
+
+    if not exists:
+        return HttpResponse(status=404, content=error_response, content_type='application/json')
+
+    comic = Comic.objects.get(id=id)
+    comic.delete()
+
+    success_response = json.dumps({
+        "status": "ok",
+        "message": "comic deleted successfully"
+    })
+
+    return HttpResponse(status=200, content=success_response, content_type='application/json')
