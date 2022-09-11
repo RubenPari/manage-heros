@@ -53,6 +53,32 @@ def get_all_available_by_hero(request):
     return HttpResponse(comics_list, content_type='application/json')
 
 
+def get_all(response):
+    if response.method != 'GET':
+        return HttpResponse(status=405, content=None, content_type='application/json')
+
+    comics = Comic.objects.values_list()
+    comics_list = []
+
+    for comic in comics:
+        comics_list.append({
+            "id": comic[0],
+            "title": comic[1],
+            "description": comic[2],
+            "isbn": comic[3],
+            "ean": comic[4],
+            "format": comic[5],
+            "pageCount": comic[6],
+            "resourceURI": comic[7],
+            "url": comic[8],
+            "thumbnail": comic[9]
+        })
+
+    comics_list = json.dumps(comics_list)
+
+    return HttpResponse(comics_list, content_type='application/json')
+
+
 # add a new comic
 @csrf_exempt
 def add(request):
